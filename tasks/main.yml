@@ -1,0 +1,47 @@
+---
+# tasks file for ansible-role-tCoffee
+
+- name: Detect environment
+  set_fact:
+    base_path: "{% if ansible_domain == 'cedar.computecanada.ca' %}{{ ansible_env.HOME }}/scratch{% else %}{{ ansible_env.HOME }}{% endif %}"
+  when: base_path is not defined
+
+- name: Create /tmp directory
+  file:
+    path: /tmp/biol
+    state: directory
+
+- name: Get util files
+  get_url:
+    url: "{{ conda_util_file }}"
+    dest: /tmp/biol/
+
+- name: Set conda executable variable
+  set_fact:
+    conda_executable: "{{ base_path }}/.biolighthouse/software/conda/bin/conda"
+  when: conda_executable is not defined
+
+- name: Create a conda environment
+  conda_create:
+    name: "bl_tCoffee"
+    executable: "{{ base_path }}/.biolighthouse/software/conda/bin/conda"
+
+- name: Put environment activation in .bashrc
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    line: "conda activate bl_tCoffee"
+
+- name: Install t-coffee via conda
+  conda_install:
+    name: 't-coffee'
+    version: '13.39.0'
+    executable: "{{ conda_executable }}"
+    channel: bioconda
+    environment: bl_tCoffee
+  notify: Remove biol tmp dir
+
+- name: Remove environment activation in .bashrc
+  lineinfile:
+    path: "{{ ansible_env.HOME }}/.bashrc"
+    regexp: "^conda activate bl_*"
+    state: absent
