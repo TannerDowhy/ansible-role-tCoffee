@@ -23,4 +23,4 @@ galaxy_info:
   galaxy_tags: ['biolighthouse', 't-coffee', 'tcoffee']
 
 dependencies:
- - tannerdowhy.conda
+ - tannerdowhy.ansible_role_conda
